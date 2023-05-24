@@ -2,6 +2,10 @@
 name = "axum-api"
 version = "1.0.0"
 edition = "2021"
+authors = ["Kasra Alizadeh"]
+repository = "https://github.com/ikaaasra/rust-api"
+homepage = "https://github.com/ikaaasra/rust-api"
+readme = "README.md"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
