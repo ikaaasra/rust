@@ -9,7 +9,7 @@ pub struct GenericResponse {
 
 #[derive(Serialize, Debug)]
 pub struct ToDoData {
-    pub todo: Todo,
+    pub todo: ToDo,
 }
 
 #[derive(Serialize, Debug)]
