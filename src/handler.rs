@@ -1,5 +1,5 @@
 use crate::{
-    model::{QueryOptions, ToDo, UpdateTodo, DB},
+    model::{QueryOptions, ToDo, UpdateToDo, DB},
     response::{ToDoData, ToDoListResponse, ToDoSingleResponse},
 };
 use axum::{
@@ -9,6 +9,12 @@ use axum::{
     Json,
 };
 use uuid::Uuid;
+
+pub async fn health_handler() -> impl IntoResponse {
+    return Json(
+        serde_json::json!({"status":"success","message":"Build Simple CRUD(CREATE,READ,UPDATE,DELETE) API in Rust using Axum"}),
+    );
+}
 
 // pub async fn create_todo_handler()-> {}
 // pub async fn get_todo_handler()-> {}
