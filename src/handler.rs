@@ -1,6 +1,6 @@
 use crate::{
     model::{QueryOptions, ToDo, UpdateToDo, DB},
-    response::{ToDoData, ToDoListResponse, ToDoSingleResponse},
+    response::{ToDoListResponse, ToDoSingleResponse},
 };
 use axum::{
     extract::{Path, Query, State},
@@ -93,7 +93,57 @@ pub async fn get_todos_handler(
 }
 
 // ----------------------------------------------------------------- UPDATE_TODO
-// pub async fn update_todo_handler()-> {}
+pub async fn update_todo_handler(
+    Path(id): Path<Uuid>,
+    State(db): State<DB>,
+    Json(body): Json<UpdateToDo>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let id = id.to_string();
+    let mut vec = db.lock().await;
+
+    if let Some(todo) = vec.iter_mut().find(|todo| todo.id == Some(id.clone())) {
+        let datetime = chrono::Utc::now();
+        let title = body
+            .title
+            .to_owned()
+            .unwrap_or_else(|| todo.title.to_owned());
+        let content = body
+            .content
+            .to_owned()
+            .unwrap_or_else(|| todo.content.to_owned());
+        let complete = body.complete.unwrap_or(todo.complete.unwrap());
+        let payload = ToDo {
+            id: todo.id.to_owned(),
+            title: if !title.is_empty() {
+                title
+            } else {
+                todo.title.to_owned()
+            },
+            content: if !content.is_empty() {
+                content
+            } else {
+                todo.content.to_owned()
+            },
+            complete: Some(complete),
+            createdAt: todo.createdAt,
+            updatedAt: Some(datetime),
+        };
+        *todo = payload;
+
+        let json_response: ToDoSingleResponse = ToDoSingleResponse {
+            status: "success".to_string(),
+            data: todo.clone(),
+        };
+        Ok((StatusCode::OK, Json(json_response)))
+    } else {
+        let error_response = serde_json::json!({
+            "status": "fail",
+            "message": format!("Todo with ID: {} not found", id)
+        });
+
+        Err((StatusCode::NOT_FOUND, Json(error_response)))
+    }
+}
 
 // ----------------------------------------------------------------- DELETE_TODO
 pub async fn delete_todo_handler(

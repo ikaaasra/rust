@@ -1,7 +1,7 @@
 use crate::{
     handler::{
         create_todo_handler, delete_todo_handler, get_todo_handler, get_todos_handler,
-        health_handler,
+        health_handler, update_todo_handler,
     },
     model,
 };
@@ -18,7 +18,9 @@ pub fn router() -> Router {
         )
         .route(
             "/api/todos/:id",
-            get(get_todo_handler).delete(delete_todo_handler),
+            get(get_todo_handler)
+                .delete(delete_todo_handler)
+                .patch(update_todo_handler),
         )
         .with_state(db);
 }
