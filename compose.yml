@@ -2,21 +2,30 @@ version: '3'
 
 services:
   postgres:
-    image: postgres:15-alpine
     container_name: postgres
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?ENV_NOT_SET}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?ENV_NOT_SET}
+      - POSTGRES_DB=${POSTGRES_DB:?ENV_NOT_SET}
     ports:
-      - '5432:5432'
+      - ${POSTGRES_PORT:-5432}:5432
     volumes:
-      - progresDB:/var/lib/postgresql/data
-    env_file:
-      - ./.env
-  pgAdmin:
-    image: dpage/pgadmin4:latest
+      - postgres:/var/lib/postgresql/data
+
+  pgadmin:
     container_name: pgadmin
-    env_file:
-      - ./.env
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:?ENV_NOT_SET}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:?ENV_NOT_SET}
+    depends_on:
+      - postgres
     ports:
-      - '2345:80'
+      - ${PGADMIN_PORT:-2345}:80
+    volumes:
+      - pgadmin:/root/.pgadmin
 
 volumes:
-  progres:
+  postgres: ~
+  pgadmin: ~
