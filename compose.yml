@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - progresDB:/var/lib/postgresql/data
+    env_file:
+      - ./.env
+  pgAdmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    env_file:
+      - ./.env
+    ports:
+      - '2345:80'
+
+volumes:
+  progres:
