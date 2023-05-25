@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?ENV_NOT_SET}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?ENV_NOT_SET}
+      - POSTGRES_DB=${POSTGRES_DB:?ENV_NOT_SET}
+    ports:
+      - ${POSTGRES_PORT:-5432}:5432
+    volumes:
+      - postgres:/var/lib/postgresql/data
+
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4:latest
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL:?ENV_NOT_SET}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD:?ENV_NOT_SET}
+    depends_on:
+      - postgres
+    ports:
+      - ${PGADMIN_PORT:-2345}:80
+    volumes:
+      - pgadmin:/root/.pgadmin
+
+volumes:
+  postgres: ~
+  pgadmin: ~
