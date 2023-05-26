@@ -21,30 +21,26 @@ pub async fn signup_handler(
     State(data): State<Arc<AppState>>,
     Json(body): Json<Signup>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let qqq: Option<bool> =
+    let user_exists: Option<bool> =
         sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE mail = $1)")
             .bind(body.mail.to_owned().to_ascii_lowercase())
             .fetch_one(&data.db)
             .await
             .map_err(|e| {
-                return (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    Json(serde_json::json!(GenericResponse {
-                        status: "fail".to_string(),
-                        message: format!("Database error: {}", e),
-                    })),
-                );
+                let error_response = serde_json::json!({
+                    "status": "fail",
+                    "message": format!("Database error: {}", e),
+                });
+                (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
             })?;
 
-    if let Some(exists) = qqq {
+    if let Some(exists) = user_exists {
         if exists {
-            return Err((
-                StatusCode::CONFLICT,
-                Json(serde_json::json!(GenericResponse {
-                    status: "fail".to_string(),
-                    message: "User with that mail already exists".to_string(),
-                })),
-            ));
+            let error_response = serde_json::json!({
+                "status": "fail",
+                "message": "User with that mail already exists",
+            });
+            return Err((StatusCode::CONFLICT, Json(error_response)));
         }
     }
 
@@ -93,7 +89,7 @@ pub async fn signin_handler(
     let query = sqlx::query_as!(
         UserModel,
         "SELECT * FROM users WHERE mail = $1",
-        body.mail.to_ascii_lowercase()
+        body.mail.to_ascii_lowercase(),
     )
     .fetch_optional(&data.db)
     .await
@@ -158,7 +154,31 @@ pub async fn signin_handler(
         .headers_mut()
         .insert(header::SET_COOKIE, cookie.to_string().parse().unwrap());
 
-    // Ok(response)
+    Ok(response)
 
-    return Ok((StatusCode::OK, Json({})));
+    // return Ok((StatusCode::OK, Json({})));
+}
+
+pub async fn logout_handler() -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    let cookie = Cookie::build("token", "")
+        .path("/")
+        .max_age(time::Duration::hours(-1))
+        .same_site(SameSite::Lax)
+        .http_only(true)
+        .finish();
+
+    let mut response = Response::new(serde_json::json!({"status": "success"}).to_string());
+    response
+        .headers_mut()
+        .insert(header::SET_COOKIE, cookie.to_string().parse().unwrap());
+    Ok(response)
+}
+
+pub async fn get_me_handler(
+    Extension(user): Extension<UserModel>,
+) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
+    Ok(Json(serde_json::json!(UserSingleResponse {
+        status: "success".to_string(),
+        data: user
+    })))
 }
