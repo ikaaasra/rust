@@ -9,6 +9,7 @@ use sqlx::{postgres::PgPoolOptions, Pool, Postgres};
 use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 
+mod auth;
 mod config;
 mod handlers;
 mod model;
