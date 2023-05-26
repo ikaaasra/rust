@@ -10,7 +10,7 @@ use std::sync::Arc;
 use tower_http::cors::CorsLayer;
 
 mod config;
-mod handler;
+mod handlers;
 mod model;
 mod route;
 mod schema;
