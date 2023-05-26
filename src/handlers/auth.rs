@@ -21,26 +21,26 @@ pub async fn signup_handler(
     State(data): State<Arc<AppState>>,
     Json(body): Json<Signup>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let user_exists: Option<bool> =
+    let qqq: Option<bool> =
         sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM users WHERE mail = $1)")
             .bind(body.mail.to_owned().to_ascii_lowercase())
             .fetch_one(&data.db)
             .await
-            .map_err(|e| {
-                let error_response = serde_json::json!({
-                    "status": "fail",
-                    "message": format!("Database error: {}", e),
+            .map_err(|err| {
+                let response = serde_json::json!(GenericResponse {
+                    status: "fail".to_string(),
+                    message: format!("Database error: {}", err),
                 });
-                (StatusCode::INTERNAL_SERVER_ERROR, Json(error_response))
+                return (StatusCode::INTERNAL_SERVER_ERROR, Json(response));
             })?;
 
-    if let Some(exists) = user_exists {
+    if let Some(exists) = qqq {
         if exists {
-            let error_response = serde_json::json!({
-                "status": "fail",
-                "message": "User with that mail already exists",
+            let response = serde_json::json!(GenericResponse {
+                status: "fail".to_string(),
+                message: "User with that mail already exists".to_string(),
             });
-            return Err((StatusCode::CONFLICT, Json(error_response)));
+            return Err((StatusCode::CONFLICT, Json(response)));
         }
     }
 
@@ -154,9 +154,7 @@ pub async fn signin_handler(
         .headers_mut()
         .insert(header::SET_COOKIE, cookie.to_string().parse().unwrap());
 
-    Ok(response)
-
-    // return Ok((StatusCode::OK, Json({})));
+    return Ok(response);
 }
 
 pub async fn logout_handler() -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
@@ -171,7 +169,8 @@ pub async fn logout_handler() -> Result<impl IntoResponse, (StatusCode, Json<ser
     response
         .headers_mut()
         .insert(header::SET_COOKIE, cookie.to_string().parse().unwrap());
-    Ok(response)
+
+    return Ok(response);
 }
 
 pub async fn get_me_handler(
