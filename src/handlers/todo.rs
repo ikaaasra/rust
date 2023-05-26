@@ -15,15 +15,6 @@ use axum::{
 use serde_json::json;
 use std::sync::Arc;
 
-pub async fn health_handler() -> impl IntoResponse {
-    let json_response = serde_json::json!(GenericResponse {
-        status: "success".to_string(),
-        message: "Build Simple CRUD(CREATE,READ,UPDATE,DELETE) API in Rust using Axum".to_string(),
-    });
-
-    return Json(json_response);
-}
-
 // ----------------------------------------------------------------- CREATE_TODO
 pub async fn create_todo_handler(
     State(data): State<Arc<AppState>>,
@@ -31,7 +22,7 @@ pub async fn create_todo_handler(
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let query = sqlx::query_as!(
         ToDoModel,
-        "INSERT INTO todo (title,content) VALUES ($1,$2) RETURNING *",
+        "INSERT INTO todos (title,content) VALUES ($1,$2) RETURNING *",
         body.title.to_string(),
         body.content.to_string(),
     )
@@ -72,7 +63,7 @@ pub async fn get_todo_handler(
     Path(id): Path<uuid::Uuid>,
     State(data): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let query = sqlx::query_as!(ToDoModel, "SELECT * FROM todo WHERE id = $1", id)
+    let query = sqlx::query_as!(ToDoModel, "SELECT * FROM todos WHERE id = $1", id)
         .fetch_one(&data.db)
         .await;
 
@@ -107,7 +98,7 @@ pub async fn get_todos_handler(
 
     let query = sqlx::query_as!(
         ToDoModel,
-        "SELECT * FROM todo ORDER by id LIMIT $1 OFFSET $2",
+        "SELECT * FROM todos ORDER by id LIMIT $1 OFFSET $2",
         limit as i32,
         offset as i32
     )
@@ -139,7 +130,7 @@ pub async fn update_todo_handler(
     State(data): State<Arc<AppState>>,
     Json(body): Json<UpdateToDo>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let query = sqlx::query_as!(ToDoModel, "SELECT * FROM todo WHERE id = $1", id)
+    let query = sqlx::query_as!(ToDoModel, "SELECT * FROM todos WHERE id = $1", id)
         .fetch_one(&data.db)
         .await;
 
@@ -156,7 +147,7 @@ pub async fn update_todo_handler(
 
     let query = sqlx::query_as!(
         ToDoModel,
-        "UPDATE todo SET title = $1, content = $2, complete = $3, updated_at = $4 WHERE id = $5 RETURNING *",
+        "UPDATE todos SET title = $1, content = $2, complete = $3, updated_at = $4 WHERE id = $5 RETURNING *",
         body.title.to_owned().unwrap_or(todo.title),
         body.content.to_owned().unwrap_or(todo.content),
         body.complete.unwrap_or(todo.complete.unwrap()),
@@ -192,7 +183,7 @@ pub async fn delete_todo_handler(
     Path(id): Path<uuid::Uuid>,
     State(data): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
-    let query = sqlx::query!("DELETE FROM todo WHERE id = $1", id)
+    let query = sqlx::query!("DELETE FROM todos WHERE id = $1", id)
         .execute(&data.db)
         .await
         .unwrap()
